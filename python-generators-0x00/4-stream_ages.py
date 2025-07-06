@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 seed = __import__('seed')
 
-def stream_users_ages():
+def stream_user_ages():
     connection = seed.connect_to_prodev()
     cursor = connection.cursor()
     cursor.execute("SELECT age FROM user_data;")
@@ -19,7 +19,7 @@ def calculate_average_age():
     total_age = 0
     count = 0
 
-    for age in stream_users_ages():
+    for age in stream_user_ages():
         total_age += age[0]
         count += 1
 
