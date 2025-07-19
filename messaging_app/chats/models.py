@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-
-from django.db import models
-
-
 """
 Defines the database models for the chats application.
 """
@@ -15,17 +11,23 @@ class User(AbstractUser):
     """
     Custom User model that extends Django's AbstractUser.
 
-    Uses a UUID for the primary key and adds fields for phone number
-    and user role.
+    This model matches the database specification by explicitly defining the
+    primary key's database column name. Other fields like first_name,
+    last_name, and password are inherited from AbstractUser.
     """
     class Role(models.TextChoices):
-        """Enumeration for the user roles."""
         GUEST = 'guest', 'Guest'
         HOST = 'host', 'Host'
         ADMIN = 'admin', 'Admin'
 
-    # Override the default ID to use UUID
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # The primary key field. In Django/Python, we access this as `user.id`.
+    # In the database, the column will be named 'user_id'.
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        db_column='user_id'  # Explicitly name the DB column
+    )
     phone_number = models.CharField(max_length=15, null=True, blank=True)
     role = models.CharField(
         max_length=10,
@@ -35,27 +37,30 @@ class User(AbstractUser):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # Make email unique and required
+    # Ensure email is unique and required, inherited from AbstractUser
     email = models.EmailField(unique=True, blank=False, null=False)
 
     def __str__(self):
-        """String representation of the User model."""
         return self.username
 
 
 class Conversation(models.Model):
     """
     Represents a conversation between two or more users.
-
-    Uses a ManyToManyField to link participants, which is the standard
-    Django way to handle this relationship.
     """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # The primary key field. In the DB, the column is 'conversation_id'.
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        db_column='conversation_id'  # Explicitly name the DB column
+    )
+    # This ManyToManyField will create a separate mapping table as is
+    # standard for this relationship.
     participants = models.ManyToManyField(User, related_name='conversations')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        """String representation of the Conversation model."""
         return f"Conversation {self.id}"
 
 
@@ -63,12 +68,20 @@ class Message(models.Model):
     """
     Represents a single message within a conversation.
     """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # The primary key field. In the DB, the column is 'message_id'.
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        db_column='message_id'  # Explicitly name the DB column
+    )
+    # This ForeignKey will create a 'conversation_id' column in the DB.
     conversation = models.ForeignKey(
         Conversation,
         on_delete=models.CASCADE,
         related_name='messages'
     )
+    # This ForeignKey will create a 'sender_id' column in the DB.
     sender = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -78,9 +91,7 @@ class Message(models.Model):
     sent_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        """Meta options for the Message model."""
         ordering = ['sent_at']
 
     def __str__(self):
-        """String representation of the Message model."""
         return f"Message from {self.sender} at {self.sent_at}"
