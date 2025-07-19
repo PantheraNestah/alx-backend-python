@@ -141,6 +141,115 @@ python -m unittest -v test_utils.py
 └── fixtures.py           # Test fixtures and data
 ```
 
+## Development Practices & Code Quality
+
+### Code Style Compliance
+This project follows **PEP 8** style guidelines using `pycodestyle` for consistent code formatting:
+- Line length limit of 79 characters
+- Proper indentation and spacing
+- Consistent naming conventions
+- Clean trailing whitespace handling
+
+### Virtual Environment Setup
+The project uses a Python virtual environment for dependency isolation:
+```bash
+# Activate virtual environment (Windows PowerShell)
+C:\path\to\your\venv\Scripts\Activate.ps1
+
+# Install development dependencies
+pip install requests parameterized pycodestyle
+```
+
+### Testing Strategy
+
+#### Unit Tests Coverage
+- **16 individual test cases** covering all core functionality
+- **Parameterized testing** for multiple input scenarios
+- **Mock objects** to isolate external dependencies
+- **Property mocking** for testing cached properties
+- **Exception handling** verification
+
+#### Integration Tests
+- **End-to-end workflow testing** with `TestIntegrationGithubOrgClient`
+- **HTTP request mocking** using `unittest.mock.patch`
+- **Fixture-based testing** with realistic GitHub API responses
+- **License filtering** integration scenarios
+
+### Debugging and Fixes Applied
+
+#### Test Infrastructure Issues Resolved
+1. **Import Path Corrections**: Fixed integration test mocking from `client.requests.get` to `utils.requests.get`
+2. **Parameterized Syntax**: Corrected parameterized decorator usage for proper tuple arguments
+3. **Missing Dependencies**: Added `parameterized` and `requests` libraries to virtual environment
+4. **Indentation Errors**: Resolved docstring formatting and indentation issues
+
+#### Code Quality Improvements
+- **pycodestyle compliance**: All Python files now pass style checks
+- **Line length optimization**: Long lines properly wrapped for readability
+- **Trailing whitespace removal**: Clean file endings maintained
+- **Proper blank line spacing**: Class and method separations follow PEP 8
+
+### Git Workflow & Version Control
+
+#### Commit Strategy
+Each logical change committed separately with descriptive messages:
+- `feat:` for new features and functionality
+- `test:` for test files and testing improvements
+- `fix:` for bug fixes and corrections
+- `style:` for code formatting and style improvements
+- `docs:` for documentation updates
+- `chore:` for maintenance tasks
+
+#### Repository Management
+- **Comprehensive .gitignore**: Excludes Python cache files and build artifacts
+- **Clean working tree**: No uncommitted changes or untracked files
+- **Synchronized with remote**: All changes pushed to GitHub main branch
+
+### Quality Assurance Results
+
+#### Test Execution Summary
+```
+✅ All 16 tests passing
+✅ 100% test coverage for core functionality
+✅ No pycodestyle violations
+✅ All integration tests functioning correctly
+✅ Proper virtual environment isolation
+```
+
+#### Files Validated
+- `utils.py`: Core utility functions with comprehensive test coverage
+- `client.py`: GitHub API client with mocked external dependencies
+- `test_utils.py`: Unit tests with parameterized scenarios
+- `test_client.py`: Integration tests with fixture-based data
+- `fixtures.py`: Test data management and mock responses
+
+## Dependencies
+
+### Required Python Packages
+```txt
+requests>=2.32.4        # HTTP client for API calls
+parameterized>=0.9.0    # Parameterized test support
+pycodestyle>=2.14.0     # Code style checking (development)
+```
+
+### Virtual Environment
+Project configured with isolated Python environment for consistent dependency management.
+
+## Continuous Integration Notes
+
+The project is structured for easy CI/CD integration with:
+- Clean test discovery patterns
+- No external API dependencies in tests (all mocked)
+- Consistent virtual environment setup
+- Style checking automation ready
+
 ## Author
 
 This project is part of the ALX Backend Python curriculum, focusing on advanced testing methodologies and best practices in Python development.
+
+### Development Timeline
+- **Initial Implementation**: Core functionality and basic tests
+- **Testing Enhancement**: Comprehensive test coverage with mocking
+- **Code Quality**: PEP 8 compliance and style improvements
+- **Integration Testing**: End-to-end workflow validation
+- **Documentation**: Comprehensive README and inline documentation
