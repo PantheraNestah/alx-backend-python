@@ -191,3 +191,9 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
             client.public_repos(license="apache-2.0"),
             self.apache2_repos
         )
+    
+    def test_has_license(self) -> None:
+        """
+        Integration test for the `has_license` static method.
+        """
+        pass
