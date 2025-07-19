@@ -91,7 +91,9 @@ class Message(models.Model):
     sent_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['sent_at']
+        """Meta options for the Message model."""
+        # Order by most recent first. This is crucial for get_last_message.
+        ordering = ['-sent_at']
 
     def __str__(self):
         return f"Message from {self.sender} at {self.sent_at}"
