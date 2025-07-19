@@ -12,6 +12,7 @@ from unittest.mock import PropertyMock
 
 from fixtures import TEST_PAYLOAD
 
+
 class TestGithubOrgClient(unittest.TestCase):
     """
     Test suite for the `GithubOrgClient` class.
@@ -106,7 +107,7 @@ class TestGithubOrgClient(unittest.TestCase):
             # Assert the mocked property and get_json were called once
             mock_public_repos_url.assert_called_once()
             mock_get_json.assert_called_once_with(known_repos_url)
-    
+
     @parameterized.expand([
         ({"license": {"key": "my_license"}}, "my_license", True),
         ({"license": {"key": "other_license"}}, "my_license", False),
@@ -123,6 +124,7 @@ class TestGithubOrgClient(unittest.TestCase):
         """
         result = GithubOrgClient.has_license(repo, license_key)
         self.assertEqual(result, expected)
+
 
 @parameterized_class(
     ('org_payload', 'repos_payload', 'expected_repos', 'apache2_repos'),
