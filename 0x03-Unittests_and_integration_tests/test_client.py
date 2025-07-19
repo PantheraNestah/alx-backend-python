@@ -7,6 +7,7 @@ from unittest.mock import patch, Mock
 from parameterized import parameterized, parameterized_class
 from client import GithubOrgClient
 from typing import Dict
+import requests
 
 from unittest.mock import PropertyMock
 
@@ -164,7 +165,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
             return mock_response
 
         # Start the patcher for requests.get
-        cls.get_patcher = patch('utils.requests.get')
+        cls.get_patcher = patch('requests.get')
         mock_get = cls.get_patcher.start()
         mock_get.side_effect = requests_get_side_effect
 
@@ -192,8 +193,3 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
             self.apache2_repos
         )
     
-    def test_has_license(self) -> None:
-        """
-        Integration test for the `has_license` static method.
-        """
-        pass
