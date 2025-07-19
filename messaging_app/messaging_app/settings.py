@@ -43,6 +43,8 @@ REST_FRAMEWORK = {
 
 INSTALLED_APPS = [
     'rest_framework',
+    'django_filters',
+    'chats',
     'chats.apps.ChatsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
