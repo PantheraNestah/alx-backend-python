@@ -77,7 +77,7 @@ class TestGetJson(unittest.TestCase):
         result = get_json(test_url)
 
         """
-        Assert that the mocked get method was called once with 
+        Assert that the mocked get method was called once with
         the correct URL
         """
         mock_get.assert_called_once_with(test_url)
@@ -105,7 +105,7 @@ class TestMemoize(unittest.TestCase):
             @memoize
             def a_property(self):
                 """
-                A property that uses memoization to cache 
+                A property that uses memoization to cache
                 a_method's result.
                 """
                 return self.a_method()
