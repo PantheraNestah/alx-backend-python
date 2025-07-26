@@ -6,6 +6,8 @@ from rest_framework import viewsets, permissions, status, filters
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.status import HTTP_403_FORBIDDEN
 
 
 from .models import Conversation, Message
@@ -73,6 +75,9 @@ class MessageViewSet(viewsets.ModelViewSet):
         conversation_pk = self.kwargs.get('conversation_pk')
         conversation = get_object_or_404(Conversation, pk=conversation_pk)
 
+        if self.request.user not in conversation.participants.all():
+            raise HTTP_403_FORBIDDEN("You are not a participant in this conversation.")
+
         return Message.objects.filter(conversation_id=conversation_pk).order_by('sent_at')
 
     def perform_create(self, serializer):
@@ -81,5 +86,7 @@ class MessageViewSet(viewsets.ModelViewSet):
         """
         conversation_pk = self.kwargs.get('conversation_pk')
         conversation = get_object_or_404(Conversation, pk=conversation_pk)
+        if self.request.user not in conversation.participants.all():
+            raise HTTP_403_FORBIDDEN("You are not a participant in this conversation.")
 
         serializer.save(sender=self.request.user, conversation=conversation)
