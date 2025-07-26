@@ -66,16 +66,24 @@ class IsParticipantOfConversation(permissions.BasePermission):
         return True
 
     def has_object_permission(self, request, view, obj):
-
         if not request.user or not request.user.is_authenticated:
             return False
 
-        # If the object is a Conversation
-        if isinstance(obj, Conversation):
-            return request.user in obj.participants.all()
+        # Allow read-only permissions for any authenticated user who is a participant
+        if request.method in permissions.SAFE_METHODS:
+            if isinstance(obj, Conversation):
+                return request.user in obj.participants.all()
+            if isinstance(obj, Message):
+                return request.user in obj.conversation.participants.all()
+            return False # Default deny for unknown obj types
 
-        if isinstance(obj, Message): 
-             return request.user in obj.conversation.participants.all()
+        # Explicitly check for write permissions (PUT, PATCH, DELETE)
+        # Only allow participants to modify or delete
+        if request.method in ["PUT", "PATCH", "DELETE"]:
+            if isinstance(obj, Conversation):
+                return request.user in obj.participants.all()
+            if isinstance(obj, Message):
+                return request.user in obj.conversation.participants.all()
+            return False # Default deny for unknown obj types
 
-        # Fallback for any other unexpected object types
-        return False
+        return False # Deny all other unhandled cases
