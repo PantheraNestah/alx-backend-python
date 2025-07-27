@@ -109,7 +109,7 @@ class OffensiveLanguageMiddleware:
         return ip
 
 
-class RolePermissionMiddleware:
+class RolepermissionMiddleware:
     # --- Configuration ---
     # Define URL path prefixes that require special permissions.
     # Any URL starting with these will be checked.
