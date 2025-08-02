@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sent Messages</title>
+</head>
+<body>
+    <h1>Messages You Sent</h1>
+    
+    {% if sent_messages %}
+        <ul>
+            {% for message in sent_messages %}
+                <li>
+                    <p>
+                        <strong>To:</strong> {{ message.receiver.username }}<br>
+                        <strong>Content:</strong> {{ message.content|truncatewords:20 }}
+                        {% if message.edited %}
+                            <em>(edited)</em>
+                        {% endif %}
+                    </p>
+                    <small>Sent: {{ message.timestamp }}</small><br>
+                    {% if message.parent_message %}
+                        <small>Reply to message: {{ message.parent_message.id }}</small><br>
+                    {% endif %}
+                    <a href="{% url 'message_detail' message.id %}">View Details</a> |
+                    <a href="{% url 'edit_message' message.id %}">Edit</a>
+                    {% if message.replies.all %}
+                        | <strong>{{ message.replies.count }} replies</strong>
+                    {% endif %}
+                </li>
+                <hr>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You haven't sent any messages yet.</p>
+    {% endif %}
+    
+    <p><a href="{% url 'inbox' %}">Back to Inbox</a></p>
+</body>
+</html>

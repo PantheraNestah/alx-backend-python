@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Conversations</title>
+</head>
+<body>
+    <h1>Your Conversations</h1>
+    
+    {% if user_messages %}
+        <ul>
+            {% for message in user_messages %}
+                <li>
+                    <p>
+                        {% if message.sender == request.user %}
+                            <strong>You → {{ message.receiver.username }}:</strong>
+                        {% else %}
+                            <strong>{{ message.sender.username }} → You:</strong>
+                        {% endif %}
+                        {{ message.content|truncatewords:20 }}
+                        {% if message.edited %}
+                            <em>(edited)</em>
+                        {% endif %}
+                    </p>
+                    <small>{{ message.timestamp }}</small><br>
+                    {% if message.parent_message %}
+                        <small>Reply to message: {{ message.parent_message.id }}</small><br>
+                    {% endif %}
+                    <a href="{% url 'message_detail' message.id %}">View Details</a>
+                    {% if message.sender == request.user %}
+                        | <a href="{% url 'edit_message' message.id %}">Edit</a>
+                    {% endif %}
+                    | <a href="{% url 'conversation_thread' message.id %}">View Thread</a>
+                    {% if message.replies.all %}
+                        | <strong>{{ message.replies.count }} replies</strong>
+                    {% endif %}
+                </li>
+                <hr>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No conversations found.</p>
+    {% endif %}
+    
+    <p>
+        <a href="{% url 'inbox' %}">Inbox</a> | 
+        <a href="{% url 'sent_messages' %}">Sent Messages</a>
+    </p>
+</body>
+</html>

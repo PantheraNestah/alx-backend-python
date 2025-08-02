@@ -34,58 +34,41 @@ def delete_user_account(request):
 @login_required
 @cache_page(60) # Cache this view for 60 seconds
 def conversation_thread_view(request, message_id):
-    # Find the root message of the thread
+    # Find the root message of the thread using optimized query
     try:
-        current_message = Message.objects.select_related('parent_message').get(pk=message_id)
+        current_message = Message.objects.select_related('parent_message', 'sender', 'receiver').get(pk=message_id)
         root_message = current_message
         while root_message.parent_message:
             root_message = root_message.parent_message
     except Message.DoesNotExist:
         return render(request, '404.html') # Or some error page
 
-    # Now that we have the root, we need to fetch all its descendants.
-    # A raw SQL query with a recursive Common Table Expression (CTE) is the most performant way.
+    # Use Django ORM recursive query to fetch all replies to a message
+    def get_message_thread_recursive(root_msg):
+        """
+        Recursive function using Django's ORM to fetch all replies to a message 
+        and display them in a threaded format.
+        """
+        # Get direct replies using Message.objects.filter with optimizations
+        direct_replies = Message.objects.filter(
+            parent_message=root_msg
+        ).select_related(
+            'sender', 'receiver', 'parent_message'
+        ).prefetch_related(
+            'history__edited_by', 'replies__sender', 'replies__receiver'
+        ).order_by('timestamp')
+        
+        # Recursively get replies for each direct reply
+        for reply in direct_replies:
+            reply.threaded_replies = get_message_thread_recursive(reply)
+        
+        return list(direct_replies)
     
-    raw_query = """
-    WITH RECURSIVE message_thread AS (
-        -- Base case: select the root message
-        SELECT * FROM messaging_message WHERE id = %s
-        UNION ALL
-        -- Recursive step: select all replies
-        SELECT m.* FROM messaging_message m
-        JOIN message_thread mt ON m.parent_message_id = mt.id
-    )
-    SELECT * FROM message_thread;
-    """
-    
-    # Execute the raw query and prefetch related users
-    all_messages_in_thread = list(Message.objects.raw(raw_query, [root_message.id]))
-    
-    # Manually prefetch sender and receiver to avoid N+1 in the template
-    user_ids = {msg.sender_id for msg in all_messages_in_thread} | {msg.receiver_id for msg in all_messages_in_thread}
-    users_by_id = {user.id: user for user in User.objects.filter(id__in=user_ids)}
-
-    # Build the thread structure in Python
-    messages_by_id = {}
-    for msg in all_messages_in_thread:
-        # Attach the prefetched user objects
-        msg.sender = users_by_id.get(msg.sender_id)
-        msg.receiver = users_by_id.get(msg.receiver_id)
-        # Initialize an empty list for replies
-        msg.threaded_replies = []
-        messages_by_id[msg.id] = msg
-
-    # Link replies to their parents
-    for msg in all_messages_in_thread:
-        if msg.parent_message_id and msg.parent_message_id in messages_by_id:
-            parent = messages_by_id[msg.parent_message_id]
-            parent.threaded_replies.append(msg)
-
-    # The final result is the root message with all children nested within it
-    thread_root_with_replies = messages_by_id[root_message.id]
+    # Get the complete thread structure starting from root
+    root_message.threaded_replies = get_message_thread_recursive(root_message)
     
     return render(request, 'messaging/conversation_thread.html', {
-        'root_message': thread_root_with_replies,
+        'root_message': root_message,
     })
 
 @login_required
@@ -129,4 +112,40 @@ def edit_message(request, message_id):
     
     return render(request, 'messaging/edit_message.html', {
         'message': message,
+    })
+
+@login_required
+def sent_messages_view(request):
+    """
+    View to show messages sent by the current user with optimized queries.
+    """
+    # Use Message.objects.filter with sender=request.user and optimize with select_related
+    sent_messages = Message.objects.filter(
+        sender=request.user
+    ).select_related(
+        'receiver', 'parent_message'
+    ).prefetch_related(
+        'history__edited_by', 'replies__sender', 'replies__receiver'
+    ).order_by('-timestamp')
+    
+    return render(request, 'messaging/sent_messages.html', {
+        'sent_messages': sent_messages,
+    })
+
+@login_required
+def user_conversations_view(request):
+    """
+    View to show all conversations involving the current user with query optimization.
+    """
+    # Use Message.objects.filter to get messages where user is sender or receiver
+    user_messages = Message.objects.filter(
+        Q(sender=request.user) | Q(receiver=request.user)
+    ).select_related(
+        'sender', 'receiver', 'parent_message'
+    ).prefetch_related(
+        'replies__sender', 'replies__receiver', 'history__edited_by'
+    ).order_by('-timestamp')
+    
+    return render(request, 'messaging/conversations.html', {
+        'user_messages': user_messages,
     })
