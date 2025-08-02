@@ -1,0 +1,34 @@
+<!-- notifications/templates/notifications/message_detail.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Message Detail</title>
+</head>
+<body>
+    <h1>Message from {{ message.sender.username }} to {{ message.receiver.username }}</h1>
+    <p>
+        <strong>Current Content:</strong> {{ message.content }}
+        {% if message.edited %}
+            <em>(edited)</em>
+        {% endif %}
+    </p>
+    <small>Sent at: {{ message.timestamp }}</small>
+
+    <hr>
+
+    {% if edit_history %}
+        <h2>Edit History</h2>
+        <ul>
+            {% for edit in edit_history %}
+                <li>
+                    <p><strong>Previous version:</strong> {{ edit.old_content }}</p>
+                    <small>Edited at: {{ edit.edited_at }}</small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No edit history for this message.</p>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!-- notifications/templates/notifications/inbox.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Unread Messages</title>
+</head>
+<body>
+    <h1>Inbox (Unread Messages)</h1>
+
+    {% if unread_messages %}
+        <ul>
+            {% for message in unread_messages %}
+                <li>
+                    <p>
+                        <strong>From:</strong> {{ message.sender.username }} <br>
+                        <strong>Message:</strong> {{ message.content|truncatewords:20 }}
+                    </p>
+                    <small>Received: {{ message.timestamp }}</small> <br>
+                    <!-- Link to the full thread and a link to mark as read -->
+                    <a href="{% url 'conversation_thread' message.id %}">View Thread</a> | 
+                    <a href="{% url 'inbox' %}?mark_read={{ message.id }}">Mark as Read</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You have no unread messages.</p>
+    {% endif %}
+</body>
+</html>

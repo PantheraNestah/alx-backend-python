@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Conversation Thread</title>
+    <style>
+        .message-thread { border-left: 2px solid #ccc; padding-left: 20px; margin-left: 20px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Conversation Thread</h1>
+    {% include "notifications/_message_thread_partial.html" with message=root_message %}
+</body>
+</html>

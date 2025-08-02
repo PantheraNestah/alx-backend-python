@@ -1,0 +1,20 @@
+<div class="message-container">
+    <p>
+        <strong>From:</strong> {{ message.sender.username }}
+        | <strong>To:</strong> {{ message.receiver.username }}
+    </p>
+    <p>{{ message.content }}</p>
+    <small>Posted at: {{ message.timestamp }} {% if message.edited %}(edited){% endif %}</small>
+    
+    <!-- Recursive rendering of replies -->
+    {% if message.threaded_replies %}
+        <div class="message-thread">
+            <h4>Replies:</h4>
+            {% for reply in message.threaded_replies %}
+                <!-- THE RECURSIVE CALL -->
+                {% include "notifications/_message_thread_partial.html" with message=reply %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+<hr>

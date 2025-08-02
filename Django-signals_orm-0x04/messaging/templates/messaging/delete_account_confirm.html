@@ -1,0 +1,19 @@
+<!-- notifications/templates/notifications/delete_account_confirm.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Confirm Account Deletion</title>
+</head>
+<body>
+    <h1>Delete Your Account</h1>
+    <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+    <p>All of your messages and notifications will be permanently removed.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Yes, I want to delete my account</button>
+        <a href="/">Cancel</a>
+    </form>
+</body>
+</html>
