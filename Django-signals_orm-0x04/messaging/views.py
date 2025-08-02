@@ -50,12 +50,16 @@ def conversation_thread_view(request, message_id):
         and display them in a threaded format.
         """
         # Get direct replies using Message.objects.filter with optimizations
+        # Optimize this query with .only() to retrieve only necessary fields
         direct_replies = Message.objects.filter(
             parent_message=root_msg
         ).select_related(
             'sender', 'receiver', 'parent_message'
         ).prefetch_related(
             'history__edited_by', 'replies__sender', 'replies__receiver'
+        ).only(
+            'id', 'content', 'timestamp', 'edited', 'is_read',
+            'sender__username', 'receiver__username', 'parent_message__id'
         ).order_by('timestamp')
         
         # Recursively get replies for each direct reply
@@ -119,13 +123,16 @@ def sent_messages_view(request):
     """
     View to show messages sent by the current user with optimized queries.
     """
-    # Use Message.objects.filter with sender=request.user and optimize with select_related
+    # Use Message.objects.filter with sender=request.user and optimize with select_related and .only()
     sent_messages = Message.objects.filter(
         sender=request.user
     ).select_related(
         'receiver', 'parent_message'
     ).prefetch_related(
         'history__edited_by', 'replies__sender', 'replies__receiver'
+    ).only(
+        'id', 'content', 'timestamp', 'edited', 'is_read',
+        'receiver__username', 'parent_message__id'
     ).order_by('-timestamp')
     
     return render(request, 'messaging/sent_messages.html', {
@@ -138,14 +145,38 @@ def user_conversations_view(request):
     View to show all conversations involving the current user with query optimization.
     """
     # Use Message.objects.filter to get messages where user is sender or receiver
+    # Optimize this query with .only() to retrieve only necessary fields
     user_messages = Message.objects.filter(
         Q(sender=request.user) | Q(receiver=request.user)
     ).select_related(
         'sender', 'receiver', 'parent_message'
     ).prefetch_related(
         'replies__sender', 'replies__receiver', 'history__edited_by'
+    ).only(
+        'id', 'content', 'timestamp', 'edited', 'is_read',
+        'sender__username', 'receiver__username', 'parent_message__id'
     ).order_by('-timestamp')
     
     return render(request, 'messaging/conversations.html', {
         'user_messages': user_messages,
+    })
+
+@login_required
+def unread_messages_dashboard(request):
+    """
+    Dashboard view using the custom UnreadMessagesManager to show unread message statistics.
+    """
+    # Use the custom manager methods
+    unread_messages = Message.unread.unread_for_user(request.user)
+    unread_count = Message.unread.unread_count_for_user(request.user)
+    
+    # Option to mark all messages as read
+    if request.method == 'POST' and request.POST.get('mark_all_read'):
+        marked_count = Message.unread.mark_as_read_for_user(request.user)
+        messages.success(request, f'Marked {marked_count} messages as read.')
+        return redirect('unread_dashboard')
+    
+    return render(request, 'messaging/unread_dashboard.html', {
+        'unread_messages': unread_messages,
+        'unread_count': unread_count,
     })

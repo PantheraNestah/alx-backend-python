@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Unread Messages Dashboard</title>
+</head>
+<body>
+    <h1>Unread Messages Dashboard</h1>
+    
+    <div>
+        <h2>Statistics</h2>
+        <p><strong>Total Unread Messages:</strong> {{ unread_count }}</p>
+    </div>
+    
+    {% if unread_messages %}
+        <div>
+            <h2>Unread Messages</h2>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" name="mark_all_read" value="1">Mark All as Read</button>
+            </form>
+            <br>
+            
+            <ul>
+                {% for message in unread_messages %}
+                    <li>
+                        <p>
+                            <strong>From:</strong> {{ message.sender.username }}<br>
+                            <strong>Content:</strong> {{ message.content|truncatewords:15 }}
+                        </p>
+                        <small>Received: {{ message.timestamp }}</small><br>
+                        <a href="{% url 'message_detail' message.id %}">View Details</a> |
+                        <a href="{% url 'conversation_thread' message.id %}">View Thread</a> |
+                        <a href="{% url 'inbox' %}?mark_read={{ message.id }}">Mark as Read</a>
+                    </li>
+                    <hr>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <p>No unread messages! 🎉</p>
+    {% endif %}
+    
+    <hr>
+    <p>
+        <a href="{% url 'inbox' %}">Regular Inbox</a> |
+        <a href="{% url 'sent_messages' %}">Sent Messages</a> |
+        <a href="{% url 'conversations' %}">All Conversations</a>
+    </p>
+</body>
+</html>

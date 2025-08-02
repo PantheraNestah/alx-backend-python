@@ -1,32 +1,6 @@
 from django.db import models
-
-# Create your models here.
-# notifications/models.py
-
-from django.db import models
 from django.contrib.auth.models import User
-
-
-class UnreadMessagesManager(models.Manager):
-    def get_queryset(self):
-        # Start with the base queryset from the default manager
-        return super().get_queryset()
-
-    def unread_for_user(self, user):
-        """
-        Returns a queryset of unread messages for a given user.
-        Optimized with .only() to fetch only essential fields for an inbox list.
-        """
-        # Filter for messages where the user is the receiver and the message is unread
-        return self.get_queryset().filter(
-            receiver=user, 
-            is_read=False
-        ).select_related('sender').only(
-            'id', 
-            'content', 
-            'timestamp', 
-            'sender__username' # Also fetch the sender's username efficiently
-        ).order_by('-timestamp')
+from .managers import UnreadMessagesManager
 
 
 class Message(models.Model):
