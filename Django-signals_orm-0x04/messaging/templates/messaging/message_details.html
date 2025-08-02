@@ -14,6 +14,11 @@
         {% endif %}
     </p>
     <small>Sent at: {{ message.timestamp }}</small>
+    
+    <!-- Show edit link only to the sender -->
+    {% if request.user == message.sender %}
+        <p><a href="{% url 'edit_message' message.id %}">Edit Message</a></p>
+    {% endif %}
 
     <hr>
 
@@ -23,7 +28,13 @@
             {% for edit in edit_history %}
                 <li>
                     <p><strong>Previous version:</strong> {{ edit.old_content }}</p>
-                    <small>Edited at: {{ edit.edited_at }}</small>
+                    <small>Edited at: {{ edit.edited_at }}
+                    {% if edit.edited_by %}
+                        by {{ edit.edited_by.username }}
+                    {% else %}
+                        by Unknown user
+                    {% endif %}
+                    </small>
                 </li>
             {% endfor %}
         </ul>

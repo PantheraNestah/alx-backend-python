@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Message</title>
+</head>
+<body>
+    <h1>Edit Message</h1>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <label for="content">Message Content:</label><br>
+            <textarea id="content" name="content" rows="5" cols="50" required>{{ message.content }}</textarea>
+        </div>
+        <br>
+        <div>
+            <button type="submit">Update Message</button>
+            <a href="{% url 'message_detail' message.id %}">Cancel</a>
+        </div>
+    </form>
+    
+    <hr>
+    <p><strong>Original message sent:</strong> {{ message.timestamp }}</p>
+    <p><strong>To:</strong> {{ message.receiver.username }}</p>
+</body>
+</html>

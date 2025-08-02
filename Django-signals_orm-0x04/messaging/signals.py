@@ -32,10 +32,14 @@ def log_message_edit(sender, instance, **kwargs):
 
         # Compare the old content with the new content
         if old_instance.content != instance.content:
+            # Get the editor from the instance if it was set
+            edited_by = getattr(instance, '_edited_by', None)
+            
             # Create a history record with the old content
             MessageHistory.objects.create(
                 message=instance,
-                old_content=old_instance.content
+                old_content=old_instance.content,
+                edited_by=edited_by
             )
             # Mark the message as edited
             instance.edited = True
