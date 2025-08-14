@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: django-app-ingress
+  # annotations can be used to customize Ingress behavior
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  # You can define a hostname here, but for minikube we can omit it
+  # and access via the minikube IP.
+  - http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            # This must match the name of your Django app's service.
+            name: django-messaging-app-service
+            port:
+              # This must match the port your service is exposed on.
+              number: 80
