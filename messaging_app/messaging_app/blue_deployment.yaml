@@ -1,0 +1,24 @@
+# blue_deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-app-blue
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: django-messaging-app
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: django-messaging-app
+        version: blue
+    spec:
+      containers:
+      - name: django-app-container
+        # Use your CURRENT/STABLE Docker image for the blue version
+        image: your-django-app-image:v1.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000

@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Objective: Perform a zero-downtime rolling update and verify its success.
+
+DEPLOYMENT_NAME="django-app-blue"
+SERVICE_NAME="django-app-service"
+
+# --- Step 1: Prepare for Downtime Check ---
+echo "--- Preparing to monitor for downtime ---"
+echo "To access the service, we need the Minikube IP and the service's NodePort."
+MINIKUBE_IP=$(minikube ip)
+# Expose the service via NodePort temporarily for curl to access it easily
+# This avoids running a separate port-forward command
+kubectl patch service $SERVICE_NAME -p '{"spec":{"type":"NodePort"}}'
+SERVICE_PORT=$(kubectl get service $SERVICE_NAME -o=jsonpath='{.spec.ports[0].nodePort}')
+URL="http://$MINIKUBE_IP:$SERVICE_PORT/"
+
+echo "Service will be tested at: $URL"
+echo "Starting continuous test requests... (Output will be shown if errors occur)"
+
+# Run curl in a background loop to continuously test the application.
+# It will run until the script is manually stopped or the rollout completes.
+(
+  while true; do
+    # -s: silent, -f: fail silently (exit code 22 on server error), -o /dev/null: discard output
+    # If curl fails (e.g., connection refused, 5xx error), it will print an error message.
+    curl -sf -o /dev/null "$URL" || echo "Request failed at $(date) - Possible Downtime!"
+    sleep 0.5
+  done
+) &
+CURL_PID=$!
+
+# Kill the background curl process on script exit
+trap "kill $CURL_PID; kubectl patch service $SERVICE_NAME -p '{\"spec\":{\"type\":\"ClusterIP\"}}'" EXIT
+
+echo ""
+echo "--- Step 2: Triggering the Rolling Update ---"
+echo "Applying the updated '$DEPLOYMENT_NAME' deployment file..."
+# Apply the updated deployment file. Kubernetes detects the change and starts the update. [1]
+kubectl apply -f blue_deployment.yaml
+
+echo ""
+echo "--- Step 3: Monitoring the Update Progress ---"
+# Monitor the rollout status. This command will exit once the update is complete. [2, 3]
+kubectl rollout status deployment/$DEPLOYMENT_NAME
+
+echo ""
+echo "--- Step 4: Verifying the Rolling Update ---"
+echo "Rollout complete. Verifying final pod status and image versions..."
+# Verify the update is complete by checking the pods.
+kubectl get pods -l app=django-messaging-app
+
+echo ""
+echo "Confirming the image version of the new pods:"
+# The jsonpath below extracts the image tag for all containers in the selected pods. [4]
+kubectl get pods -l app=django-messaging-app -o=jsonpath='{range .items[*]}{.spec.containers[0].image}{"\n"}{end}'
+
+echo ""
+echo "Continuous testing finished. Check the output above for any 'Request failed' messages."
+
+# The trap will automatically run on exit, cleaning up the background process
+# and resetting the service type.

@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# Objective: Automate the deployment steps for a blue-green strategy.
+
+echo "--- Step 1: Deploying the BLUE environment (current version) ---"
+kubectl apply -f blue_deployment.yaml
+echo "Blue deployment created."
+
+echo ""
+echo "--- Step 2: Deploying the Service to expose the BLUE environment ---"
+kubectl apply -f kubeservice.yaml
+echo "Service created. Traffic is now directed to the BLUE version."
+
+echo ""
+echo "Current active version (check service selector):"
+kubectl get service django-app-service -o=jsonpath='{.spec.selector.version}'
+echo ""
+
+# Give some time for the blue pods to be up and running
+echo "Waiting for blue pods to be ready..."
+kubectl wait --for=condition=available --timeout=60s deployment/django-app-blue
+
+echo ""
+read -p "Blue environment is live. Press [Enter] to deploy the GREEN environment..."
+
+echo ""
+echo "--- Step 3: Deploying the GREEN environment (new version) ---"
+kubectl apply -f green_deployment.yaml
+echo "Green deployment created. It is running but not receiving live traffic."
+
+echo ""
+echo "Waiting for green pods to be ready..."
+kubectl wait --for=condition=available --timeout=60s deployment/django-app-green
+
+echo "--- Step 4: Verifying the GREEN environment ---"
+echo "Checking pods for both versions. Note that only 'blue' is receiving traffic."
+kubectl get pods -l app=django-messaging-app -o wide
+
+echo ""
+echo "To check for errors in the new GREEN version, you can check its logs."
+echo "Use this command, replacing <pod-name> with a green pod name from the list above:"
+echo "kubectl logs <pod-name-green>"
+echo ""
+
+GREEN_POD=$(kubectl get pods -l version=green -o jsonpath="{.items[0].metadata.name}")
+if [ -n "$GREEN_POD" ]; then
+    echo "Example log check for the first green pod ('$GREEN_POD'):"
+    kubectl logs $GREEN_POD --tail=20
+fi
+
+echo ""
+echo "------------------------------------------------------------------"
+echo "DEPLOYMENT COMPLETE. The Green environment is ready for testing."
+echo "To switch traffic to GREEN, run the following command:"
+echo "kubectl patch service django-app-service -p '{\"spec\":{\"selector\":{\"version\":\"green\"}}}'"
+echo "------------------------------------------------------------------"
