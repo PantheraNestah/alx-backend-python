@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Objective: Start a local Kubernetes cluster, verify it, and list pods.
+
+# Start a Kubernetes cluster on your machine using minikube
+echo "Attempting to start a minikube cluster..."
+minikube start
+echo "Minikube cluster has been started."
+
+echo "--------------------------------------------------"
+
+# Verify that the cluster is running using kubectl cluster-info
+echo "Verifying the cluster status..."
+kubectl cluster-info
+echo "Cluster status verification complete."
+
+echo "--------------------------------------------------"
+
+# Retrieve the available pods
+echo "Retrieving the list of available pods in all namespaces..."
+kubectl get pods -A
+echo "Pod retrieval complete."
