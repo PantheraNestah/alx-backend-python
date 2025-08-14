@@ -1,0 +1,24 @@
+# green_deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-app-green
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: django-messaging-app
+      version: green
+  template:
+    metadata:
+      labels:
+        app: django-messaging-app
+        version: green
+    spec:
+      containers:
+      - name: django-app-container
+        # Use your NEW Docker image for the green version
+        image: your-django-app-image:v1.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
