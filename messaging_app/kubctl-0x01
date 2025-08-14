@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Objective: Scale the Django app, prepare for load testing, and monitor resources.
+
+DEPLOYMENT_NAME="django-messaging-app-deployment"
+APP_LABEL="app=django-messaging-app"
+DESIRED_REPLICAS=3
+
+echo "--- Step 1: Scaling the Deployment ---"
+echo "Scaling deployment '$DEPLOYMENT_NAME' to $DESIRED_REPLICAS replicas..."
+
+# Use kubectl scale to increase the number of replicas to 3. [1, 3, 5]
+kubectl scale deployment $DEPLOYMENT_NAME --replicas=$DESIRED_REPLICAS
+
+echo "Scaling command executed. Waiting a few seconds for pods to be created..."
+sleep 5
+
+echo ""
+echo "--- Step 2: Verifying the Pods ---"
+echo "Verifying that $DESIRED_REPLICAS pods are running for the application..."
+
+# Verify that multiple pods are running. [2]
+kubectl get pods -l $APP_LABEL -o wide
+
+echo ""
+echo "--- Step 3: Preparing for Load Testing with wrk ---"
+echo "To perform a load test, you need to access the service from your local machine."
+echo "Open a NEW terminal and run the following command to forward a local port to the service:"
+echo ""
+echo "kubectl port-forward service/django-messaging-app-service 8080:80"
+echo ""
+echo "Once port-forwarding is active, open ANOTHER new terminal and run the wrk command."
+echo "Example wrk command:"
+echo "wrk -t4 -c50 -d20s http://127.0.0.1:8080/"
+echo ""
+
+echo ""
+echo "--- Step 4: Monitoring Resource Usage with kubectl top ---"
+echo "While the load test is running in the other terminal, you can monitor the"
+echo "CPU and Memory usage of the pods with the following command."
+echo "This command will refresh every 5 seconds. Press Ctrl+C to stop."
+echo ""
+echo "Starting resource monitoring for pods with label '$APP_LABEL'..."
+
+# Monitor resource usage using kubectl top, refreshed every 5 seconds. [8, 9]
+watch -n 5 "kubectl top pod -l $APP_LABEL"
