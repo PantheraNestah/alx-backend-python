@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-messaging-app-deployment
+  labels:
+    app: django-messaging-app
+spec:
+  replicas: 1 # You can scale this up later
+  selector:
+    matchLabels:
+      app: django-messaging-app
+  template:
+    metadata:
+      labels:
+        app: django-messaging-app
+    spec:
+      containers:
+      - name: django-messaging-app-container
+        # --- IMPORTANT ---
+        # Replace 'your-django-app-image:latest' with the actual name and tag of your Docker image.
+        image: your-django-app-image:latest
+        # If you are using minikube and built the image locally,
+        # you might need to set the imagePullPolicy to 'Never'
+        # so Kubernetes doesn't try to pull it from a remote registry.
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000 # The port your Django app runs on inside the container
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: django-messaging-app-service
+spec:
+  # This makes the service only reachable from within the Kubernetes cluster. [9]
+  type: ClusterIP
+  selector:
+    # This selector needs to match the labels of the pods created by the deployment. [15]
+    app: django-messaging-app
+  ports:
+    - protocol: TCP
+      # The port the service will be available on within the cluster.
+      port: 80
+      # The port on the pod that the service will forward traffic to.
+      targetPort: 8000
