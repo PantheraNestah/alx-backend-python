@@ -1,6 +1,6 @@
 # .github/workflows/ci.yml
 
-name: Django CI
+name: Django CI with code quality checks
 
 on:
   push:
@@ -37,7 +37,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Run Django Tests
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Run Django Tests and Generate Coverage Report
       env:
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
         DEBUG: "False"
@@ -48,4 +55,11 @@ jobs:
         DB_HOST: "127.0.0.1"
         DB_PORT: "3306"
       run: |
-        python manage.py test
+        #python manage.py test
+        pytest --cov=. --cov-report=xml
+
+    - name: Upload Coverage Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage.xml
